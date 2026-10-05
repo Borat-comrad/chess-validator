@@ -1,3 +1,7 @@
 .idea/
 .venv/
 __pycache__/
+/tmp.py
+/geometry_old.py
+/main_old.py
+/tests.py
