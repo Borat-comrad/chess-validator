@@ -108,6 +108,8 @@ class Pawn(Figure):
         return result
 
     def is_pawn_path_clear(self, ver_1: int, hor_1: int, ver_2: int, hor_2: int, board):
+        """Проверяет отсутвие препятствия для пешки при дойном ходе"""
+
         direction = 1 if self.color == Color.WHITE else -1
 
         if abs(hor_2 - hor_1) == 2:
@@ -116,16 +118,21 @@ class Pawn(Figure):
         return True
 
     def capture_can_move(self, ver_1, hor_1, ver_2, hor_2):
+        """Отдельно проверяет корректность взятия пешкой по диагонали"""
+
         direction = 1 if self.color == Color.WHITE else -1
 
-        if not (hor_2 - hor_1 == direction and abs(ver_2 - ver_1) == 1):
+        if not (
+                hor_2 - hor_1 == direction
+                and abs(ver_2 - ver_1) == 1
+        ):
             return False
 
         return True
 
     def can_move(self, ver_1: int, hor_1: int, ver_2: int, hor_2: int, board):
         if board[hor_2][ver_2] is not None:
-            return self.capture_can_move(ver_1, hor_1, ver_2, hor_2, board)
+            return self.capture_can_move(ver_1, hor_1, ver_2, hor_2)
 
         return self.geom_validate(ver_1, hor_1, ver_2, hor_2) and self.is_pawn_path_clear(
             ver_1, hor_1, ver_2, hor_2, board
