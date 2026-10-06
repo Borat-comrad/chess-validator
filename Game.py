@@ -124,11 +124,9 @@ class Game:
             for ver, figure in enumerate(row):
                 if figure is None:
                     continue
-                if figure.color != self.turn:
-                    if isinstance(figure, Pawn) and figure.capture_can_move(ver, hor, kings_square[0], kings_square[1]):
-                        return False
-                    elif (not isinstance(figure, Pawn)) and figure.can_move(ver, hor, kings_square[0], kings_square[1], tmp_board):
-                        return False
+                if figure.color != self.turn and figure.attacks_square(ver, hor, kings_square[0], kings_square[1], tmp_board):
+                    return False
+
 
         return True
 

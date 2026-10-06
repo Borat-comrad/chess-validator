@@ -56,6 +56,11 @@ class King(Figure):
     def can_move(self, ver_1, hor_1, ver_2, hor_2, board):
         return self.geom_validate(ver_1, hor_1, ver_2, hor_2)
 
+    def attacks_square(self, ver_1, hor_1, ver_2, hor_2, board):
+        """Проверяет, атакует ли фигура заданную клетку"""
+
+        return self.can_move(ver_1, hor_1, ver_2, hor_2, board)
+
 
 class Queen(Figure):
     def geom_validate(self, ver_1: int, hor_1: int, ver_2: int, hor_2: int):
@@ -64,6 +69,11 @@ class Queen(Figure):
     def can_move(self, ver_1, hor_1, ver_2, hor_2, board):
         return self.geom_validate(ver_1, hor_1, ver_2, hor_2) and self.is_path_clear(ver_1, hor_1, ver_2, hor_2, board)
 
+    def attacks_square(self, ver_1, hor_1, ver_2, hor_2, board):
+        """Проверяет, атакует ли фигура заданную клетку"""
+
+        return self.can_move(ver_1, hor_1, ver_2, hor_2, board)
+
 
 class Bishop(Figure):
     def geom_validate(self, ver_1: int, hor_1: int, ver_2: int, hor_2: int):
@@ -71,6 +81,11 @@ class Bishop(Figure):
 
     def can_move(self, ver_1, hor_1, ver_2, hor_2, board):
         return self.geom_validate(ver_1, hor_1, ver_2, hor_2) and self.is_path_clear(ver_1, hor_1, ver_2, hor_2, board)
+
+    def attacks_square(self, ver_1, hor_1, ver_2, hor_2, board):
+        """Проверяет, атакует ли фигура заданную клетку"""
+
+        return self.can_move(ver_1, hor_1, ver_2, hor_2, board)
 
 
 class Knight(Figure):
@@ -83,6 +98,11 @@ class Knight(Figure):
     def can_move(self, ver_1, hor_1, ver_2, hor_2, board):
         return self.geom_validate(ver_1, hor_1, ver_2, hor_2)
 
+    def attacks_square(self, ver_1, hor_1, ver_2, hor_2, board):
+        """Проверяет, атакует ли фигура заданную клетку"""
+
+        return self.can_move(ver_1, hor_1, ver_2, hor_2, board)
+
 
 class Rook(Figure):
     def geom_validate(self, ver_1: int, hor_1: int, ver_2: int, hor_2: int):
@@ -90,6 +110,11 @@ class Rook(Figure):
 
     def can_move(self, ver_1, hor_1, ver_2, hor_2, board):
         return self.geom_validate(ver_1, hor_1, ver_2, hor_2) and self.is_path_clear(ver_1, hor_1, ver_2, hor_2, board)
+
+    def attacks_square(self, ver_1, hor_1, ver_2, hor_2, board):
+        """Проверяет, атакует ли фигура заданную клетку"""
+
+        return self.can_move(ver_1, hor_1, ver_2, hor_2, board)
 
 
 class Pawn(Figure):
@@ -137,3 +162,8 @@ class Pawn(Figure):
         return self.geom_validate(ver_1, hor_1, ver_2, hor_2) and self.is_pawn_path_clear(
             ver_1, hor_1, ver_2, hor_2, board
         )
+
+    def attacks_square(self, ver_1, hor_1, ver_2, hor_2, board):
+        """Проверяет, атакует ли фигура заданную клетку"""
+
+        return self.capture_can_move(ver_1, hor_1, ver_2, hor_2)
