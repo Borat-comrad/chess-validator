@@ -50,13 +50,13 @@ class Game:
         ):
             return False
 
-
         figure = self.board[hor_1][ver_1]
 
         if figure.color != self.turn:
             return False
 
-        return figure.can_move(ver_1, hor_1, ver_2, hor_2, self.board) and self.king_safe_check(ver_1, hor_1, ver_2, hor_2)
+        return figure.can_move(ver_1, hor_1, ver_2, hor_2, self.board) and self.king_safe_check(ver_1, hor_1, ver_2,
+                                                                                                hor_2)
 
     def move(self, ver_1, hor_1, ver_2, hor_2):
         if not self.validate_move(ver_1, hor_1, ver_2, hor_2):
@@ -69,7 +69,6 @@ class Game:
         self.board[hor_2][ver_2].marked_as_moved()
 
         return True
-
 
     # Реализация првоерки безопасности короля:
 
@@ -97,7 +96,6 @@ class Game:
 
         return tmp_board
 
-
     def get_kings_square(self, tmp_board):
         """
         Безопасность короля:
@@ -109,7 +107,6 @@ class Game:
                 if isinstance(figure, King) and figure.color == self.turn:
                     return ver, hor
 
-
     def king_safe_check(self, ver_1, hor_1, ver_2, hor_2):
         """
         Безопасность короля:
@@ -120,13 +117,20 @@ class Game:
 
         kings_square = self.get_kings_square(tmp_board)
 
-        for hor, row in enumerate(tmp_board):
+        return not self.is_square_attacked(kings_square[0], kings_square[1], tmp_board) #Возвращаем проверку условия, что для королевской клетки  is_square_attacked НЕ выполняется!
+
+
+    def is_square_attacked(self, self_ver, self_hor, board):
+        """
+        Проверяет, атакована ли клетка вражеской фигурой.
+        Используется при проверки рокировки и безопасности короля.
+        """
+        for hor, row in enumerate(board):
             for ver, figure in enumerate(row):
                 if figure is None:
                     continue
-                if figure.color != self.turn and figure.attacks_square(ver, hor, kings_square[0], kings_square[1], tmp_board):
-                    return False
+                if figure.color != self.turn and figure.attacks_square(ver, hor, self_ver, self_hor, board):
+                    return True
 
-
-        return True
+        return False
 
