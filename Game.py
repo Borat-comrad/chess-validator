@@ -56,7 +56,7 @@ class Game:
         if figure.color != self.turn:
             return False
 
-        return figure.can_move(ver_1, hor_1, ver_2, hor_2, self.board)
+        return figure.can_move(ver_1, hor_1, ver_2, hor_2, self.board) and self.king_safe_check(ver_1, hor_1, ver_2, hor_2)
 
     def move(self, ver_1, hor_1, ver_2, hor_2):
         if not self.validate_move(ver_1, hor_1, ver_2, hor_2):
