@@ -57,6 +57,10 @@ class Game:
         if figure.color != self.turn:
             return False
 
+        #Если ход - рокировка: проверяем ее
+        if self.is_try_castling(ver_1, hor_1, ver_2, hor_2, figure):
+            return self.check_castling(self.board, self.get_type_of_castling(ver_1, ver_2))
+
         return figure.can_move(ver_1, hor_1, ver_2, hor_2, self.board) and self.king_safe_check(ver_1, hor_1, ver_2,
                                                                                                 hor_2)
 
@@ -64,11 +68,14 @@ class Game:
         if not self.validate_move(ver_1, hor_1, ver_2, hor_2):
             return False
 
-        self.board[hor_2][ver_2] = self.board[hor_1][ver_1]
-        self.board[hor_1][ver_1] = None
-        self.turn = Color.BLACK if self.turn == Color.WHITE else Color.WHITE
+        if self.is_try_castling(ver_1, hor_1, ver_2, hor_2, self.board[hor_1][ver_1]):
+            self.move_castling(self.board, self.get_type_of_castling(ver_1, ver_2))
+        else:
+            self.board[hor_2][ver_2] = self.board[hor_1][ver_1]
+            self.board[hor_1][ver_1] = None
+            self.turn = Color.BLACK if self.turn == Color.WHITE else Color.WHITE
 
-        self.board[hor_2][ver_2].marked_as_moved()
+            self.board[hor_2][ver_2].marked_as_moved()
 
         return True
 
@@ -183,3 +190,43 @@ class Game:
 
         return True
 
+
+    def get_type_of_castling(self, ver_1, ver_2):
+        """
+        Првоеряем короткая или длинная рокировка
+        """
+        return TypeOfCastling.SHORT if ver_2 - ver_1 > 0 else TypeOfCastling.LONG
+
+
+    def move_castling(self, board, type_of_castling):
+        hor_of_castling = 0 if self.turn == Color.WHITE else 7
+        king_ver, king_hor = self.get_kings_square(board)
+        direction = 1 if type_of_castling == TypeOfCastling.SHORT else -1
+
+        if type_of_castling == TypeOfCastling.SHORT:
+            rook_coord = 7, hor_of_castling
+        else:
+            rook_coord = 0, hor_of_castling
+
+        rook_ver, rook_hor = rook_coord
+
+        board[hor_of_castling][king_ver + (2*direction)] = board[king_hor][king_ver] #Прермещаем короля
+        board[king_hor][king_ver] = None
+        board[hor_of_castling][king_ver + (2 * direction)].marked_as_moved()
+
+        board[hor_of_castling][king_ver + direction] = board[rook_hor][rook_ver] #Перемещаем ладью
+        board[rook_hor][rook_ver] = None
+        board[hor_of_castling][king_ver + direction].marked_as_moved()
+
+        self.turn = Color.BLACK if self.turn == Color.WHITE else Color.WHITE
+
+
+    def is_try_castling(self,  ver_1, hor_1, ver_2, hor_2, figure):
+        if (
+                isinstance(figure, King)
+                and abs(ver_2 - ver_1) == 2
+                and hor_1 == hor_2
+        ):
+            return True
+        else:
+            return False
