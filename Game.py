@@ -1,4 +1,6 @@
-from classes import Color, King, Queen, Bishop, Knight, Rook, Pawn
+from classes import Color, King, Queen, Bishop, Knight, Rook, Pawn, TypeOfCastling
+
+
 
 
 class Game:
@@ -133,4 +135,51 @@ class Game:
                     return True
 
         return False
+
+    def check_castling(self, board, type_of_castling):
+
+        hor_of_castling = 0 if self.turn == Color.WHITE else 7
+        king_ver, king_hor = self.get_kings_square(board)
+
+        if type_of_castling == TypeOfCastling.SHORT:
+            rook_coord = 7, hor_of_castling
+            path_of_king = 4, 5, 6
+            clean_squares = 5, 6
+        else:
+            rook_coord = 0, hor_of_castling
+            path_of_king = 4, 3, 2
+            clean_squares = 1, 2, 3
+
+        rook_ver, rook_hor = rook_coord
+
+        # Проверяем наличие короля
+        if (
+                (king_ver, king_hor) != (path_of_king[0], hor_of_castling)
+                or board[king_hor][king_ver].in_start_pos == False
+        ):
+            return False
+
+        # Проверяем ладью
+        if (
+                not isinstance(board[rook_hor][rook_ver], Rook)
+                or board[rook_hor][rook_ver].color != self.turn
+                or board[rook_hor][rook_ver].in_start_pos == False
+        ):
+            return False
+
+        # Проверяем битые королевские поля
+        for ver in path_of_king:
+            if not self.is_square_attacked(ver, hor_of_castling, board):
+                continue
+            else:
+                return False
+
+        # Проверяем свободный путь
+        for ver in clean_squares:
+            if board[hor_of_castling][ver] is None:
+                continue
+            else:
+                return False
+
+        return True
 
