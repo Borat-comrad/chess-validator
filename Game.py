@@ -1,4 +1,6 @@
-from classes import Color, King, Queen, Bishop, Knight, Rook, Pawn
+from classes import Color, King, Queen, Bishop, Knight, Rook, Pawn, TypeOfCastling
+
+
 
 
 class Game:
@@ -50,26 +52,32 @@ class Game:
         ):
             return False
 
-
         figure = self.board[hor_1][ver_1]
 
         if figure.color != self.turn:
             return False
 
-        return figure.can_move(ver_1, hor_1, ver_2, hor_2, self.board) and self.king_safe_check(ver_1, hor_1, ver_2, hor_2)
+        #Если ход - рокировка: проверяем ее
+        if self.is_try_castling(ver_1, hor_1, ver_2, hor_2, figure):
+            return self.check_castling(self.board, self.get_type_of_castling(ver_1, ver_2))
+
+        return figure.can_move(ver_1, hor_1, ver_2, hor_2, self.board) and self.king_safe_check(ver_1, hor_1, ver_2,
+                                                                                                hor_2)
 
     def move(self, ver_1, hor_1, ver_2, hor_2):
         if not self.validate_move(ver_1, hor_1, ver_2, hor_2):
             return False
 
-        self.board[hor_2][ver_2] = self.board[hor_1][ver_1]
-        self.board[hor_1][ver_1] = None
-        self.turn = Color.BLACK if self.turn == Color.WHITE else Color.WHITE
+        if self.is_try_castling(ver_1, hor_1, ver_2, hor_2, self.board[hor_1][ver_1]):
+            self.move_castling(self.board, self.get_type_of_castling(ver_1, ver_2))
+        else:
+            self.board[hor_2][ver_2] = self.board[hor_1][ver_1]
+            self.board[hor_1][ver_1] = None
+            self.turn = Color.BLACK if self.turn == Color.WHITE else Color.WHITE
 
-        self.board[hor_2][ver_2].marked_as_moved()
+            self.board[hor_2][ver_2].marked_as_moved()
 
         return True
-
 
     # Реализация првоерки безопасности короля:
 
@@ -97,7 +105,6 @@ class Game:
 
         return tmp_board
 
-
     def get_kings_square(self, tmp_board):
         """
         Безопасность короля:
@@ -109,7 +116,6 @@ class Game:
                 if isinstance(figure, King) and figure.color == self.turn:
                     return ver, hor
 
-
     def king_safe_check(self, ver_1, hor_1, ver_2, hor_2):
         """
         Безопасность короля:
@@ -120,13 +126,107 @@ class Game:
 
         kings_square = self.get_kings_square(tmp_board)
 
-        for hor, row in enumerate(tmp_board):
+        return not self.is_square_attacked(kings_square[0], kings_square[1], tmp_board) #Возвращаем проверку условия, что для королевской клетки  is_square_attacked НЕ выполняется!
+
+
+    def is_square_attacked(self, self_ver, self_hor, board):
+        """
+        Проверяет, атакована ли клетка вражеской фигурой.
+        Используется при проверки рокировки и безопасности короля.
+        """
+        for hor, row in enumerate(board):
             for ver, figure in enumerate(row):
                 if figure is None:
                     continue
-                if figure.color != self.turn and figure.attacks_square(ver, hor, kings_square[0], kings_square[1], tmp_board):
-                    return False
+                if figure.color != self.turn and figure.attacks_square(ver, hor, self_ver, self_hor, board):
+                    return True
 
+        return False
+
+    def check_castling(self, board, type_of_castling):
+
+        hor_of_castling = 0 if self.turn == Color.WHITE else 7
+        king_ver, king_hor = self.get_kings_square(board)
+
+        if type_of_castling == TypeOfCastling.SHORT:
+            rook_coord = 7, hor_of_castling
+            path_of_king = 4, 5, 6
+            clean_squares = 5, 6
+        else:
+            rook_coord = 0, hor_of_castling
+            path_of_king = 4, 3, 2
+            clean_squares = 1, 2, 3
+
+        rook_ver, rook_hor = rook_coord
+
+        # Проверяем наличие короля
+        if (
+                (king_ver, king_hor) != (path_of_king[0], hor_of_castling)
+                or board[king_hor][king_ver].in_start_pos == False
+        ):
+            return False
+
+        # Проверяем ладью
+        if (
+                not isinstance(board[rook_hor][rook_ver], Rook)
+                or board[rook_hor][rook_ver].color != self.turn
+                or board[rook_hor][rook_ver].in_start_pos == False
+        ):
+            return False
+
+        # Проверяем битые королевские поля
+        for ver in path_of_king:
+            if not self.is_square_attacked(ver, hor_of_castling, board):
+                continue
+            else:
+                return False
+
+        # Проверяем свободный путь
+        for ver in clean_squares:
+            if board[hor_of_castling][ver] is None:
+                continue
+            else:
+                return False
 
         return True
 
+
+    def get_type_of_castling(self, ver_1, ver_2):
+        """
+        Првоеряем короткая или длинная рокировка
+        """
+        return TypeOfCastling.SHORT if ver_2 - ver_1 > 0 else TypeOfCastling.LONG
+
+
+    def move_castling(self, board, type_of_castling):
+        hor_of_castling = 0 if self.turn == Color.WHITE else 7
+        king_ver, king_hor = self.get_kings_square(board)
+        direction = 1 if type_of_castling == TypeOfCastling.SHORT else -1
+
+        if type_of_castling == TypeOfCastling.SHORT:
+            rook_coord = 7, hor_of_castling
+        else:
+            rook_coord = 0, hor_of_castling
+
+        rook_ver, rook_hor = rook_coord
+
+        board[hor_of_castling][king_ver + (2*direction)] = board[king_hor][king_ver] #Прермещаем короля
+        board[king_hor][king_ver] = None
+        board[hor_of_castling][king_ver + (2 * direction)].marked_as_moved()
+
+        board[hor_of_castling][king_ver + direction] = board[rook_hor][rook_ver] #Перемещаем ладью
+        board[rook_hor][rook_ver] = None
+        board[hor_of_castling][king_ver + direction].marked_as_moved()
+
+        self.turn = Color.BLACK if self.turn == Color.WHITE else Color.WHITE
+
+
+    def is_try_castling(self,  ver_1, hor_1, ver_2, hor_2, figure):
+        if (
+                isinstance(figure, King)
+                and abs(ver_2 - ver_1) == 2
+                and hor_1 == hor_2
+        ):
+            return True
+        else:
+            return False
