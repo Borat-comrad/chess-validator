@@ -1,6 +1,17 @@
 from classes import Color, King, Queen, Bishop, Knight, Rook, Pawn, TypeOfCastling
 
+#Константы рокировки
+# Вертикали ладей
+SHORT_ROOK_FILE = 7
+LONG_ROOK_FILE = 0
 
+# Клетки, на которых король не должен находиться под атакой
+SHORT_KING_PATH = (4, 5, 6)
+LONG_KING_PATH = (4, 3, 2)
+
+# Клетки, которые должны быть свободными
+SHORT_CLEAR_SQUARES = (5, 6)
+LONG_CLEAR_SQUARES = (1, 2, 3)
 
 
 class Game:
@@ -136,28 +147,24 @@ class Game:
         """
         for hor, row in enumerate(board):
             for ver, figure in enumerate(row):
-                if figure is None:
-                    continue
-                if figure.color != self.turn and figure.attacks_square(ver, hor, self_ver, self_hor, board):
+                if (
+                        figure is not None
+                        and figure.color != self.turn
+                        and figure.attacks_square(ver, hor, self_ver, self_hor, board)
+                ):
                     return True
 
         return False
 
     def check_castling(self, board, type_of_castling):
-
-        hor_of_castling = 0 if self.turn == Color.WHITE else 7
-        king_ver, king_hor = self.get_kings_square(board)
-
-        if type_of_castling == TypeOfCastling.SHORT:
-            rook_coord = 7, hor_of_castling
-            path_of_king = 4, 5, 6
-            clean_squares = 5, 6
-        else:
-            rook_coord = 0, hor_of_castling
-            path_of_king = 4, 3, 2
-            clean_squares = 1, 2, 3
-
-        rook_ver, rook_hor = rook_coord
+        params = self.get_castling_params(board, type_of_castling)
+        hor_of_castling = params["hor_of_castling"]
+        king_ver = params["king_ver"]
+        king_hor = params["king_hor"]
+        rook_ver = params["rook_ver"]
+        rook_hor = params["rook_hor"]
+        path_of_king = params["path_of_king"]
+        clean_squares = params["clean_squares"]
 
         # Проверяем наличие короля
         if (
@@ -199,16 +206,13 @@ class Game:
 
 
     def move_castling(self, board, type_of_castling):
-        hor_of_castling = 0 if self.turn == Color.WHITE else 7
-        king_ver, king_hor = self.get_kings_square(board)
-        direction = 1 if type_of_castling == TypeOfCastling.SHORT else -1
-
-        if type_of_castling == TypeOfCastling.SHORT:
-            rook_coord = 7, hor_of_castling
-        else:
-            rook_coord = 0, hor_of_castling
-
-        rook_ver, rook_hor = rook_coord
+        params = self.get_castling_params(board, type_of_castling)
+        direction = params["direction"]
+        hor_of_castling = params["hor_of_castling"]
+        king_ver = params["king_ver"]
+        king_hor = params["king_hor"]
+        rook_ver = params["rook_ver"]
+        rook_hor = params["rook_hor"]
 
         board[hor_of_castling][king_ver + (2*direction)] = board[king_hor][king_ver] #Прермещаем короля
         board[king_hor][king_ver] = None
@@ -230,3 +234,30 @@ class Game:
             return True
         else:
             return False
+
+    def get_castling_params(self, board, type_of_castling):
+        direction = 1 if type_of_castling == TypeOfCastling.SHORT else -1
+        hor_of_castling = 0 if self.turn == Color.WHITE else 7
+        king_ver, king_hor = self.get_kings_square(board)
+
+        if type_of_castling == TypeOfCastling.SHORT:
+            rook_coord = SHORT_ROOK_FILE, hor_of_castling
+            path_of_king = SHORT_KING_PATH
+            clean_squares = SHORT_CLEAR_SQUARES
+        else:
+            rook_coord = LONG_ROOK_FILE, hor_of_castling
+            path_of_king = LONG_KING_PATH
+            clean_squares = LONG_CLEAR_SQUARES
+
+        rook_ver, rook_hor = rook_coord
+
+        return {
+            "hor_of_castling": hor_of_castling,
+            "direction": direction,
+            "king_ver": king_ver,
+            "king_hor": king_hor,
+            "path_of_king": path_of_king,
+            "clean_squares": clean_squares,
+            "rook_ver": rook_ver,
+            "rook_hor": rook_hor,
+        }
