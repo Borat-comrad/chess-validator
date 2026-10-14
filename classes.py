@@ -6,6 +6,11 @@ class Color(Enum):
     BLACK = "black"
 
 
+class TypeOfCastling(Enum):
+    SHORT = "short"
+    LONG = "long"
+
+
 class Figure:
 
     def __init__(self, color: Color, in_start_pos: bool = True):
